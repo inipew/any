@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "rules": [
+    {
+      "domain_suffix": [
+        "ajaib.co.id",
+        "aliyuncs.com",
+        "android.chat.openai.com",
+        "bb-os.com",
+        "bingx.com",
+        "getresponse.com",
+        "iptunnels.com",
+        "morenovel.net",
+        "polinema.ac.id",
+        "qq-os.com",
+        "we-api.com",
+        "whatismybrowser.com",
+        "xdaforums.com"
+      ],
+      "domain_keyword": [
+        "shinigami",
+        "speedtest",
+        "apkomik",
+        "komikav",
+        "cdnkomik",
+        "pojokmanga",
+        "kiryuu",
+        "komikcast",
+        "mangatale",
+        "cosmicscans",
+        "hivescans",
+        "manhwalist",
+        "reaperscans",
+        "asuracomic",
+        "asurascans",
+        "oracle",
+        "rizzfables",
+        "ainzscans",
+        "manhwa-freak",
+        "newtoki",
+        "novelcranel",
+        "hivetoon",
+        "hangukhub",
+        "novelupdates",
+        "ipinfo",
+        "disqus",
+        "fenrirtranslations",
+        "yonglibrary"
+      ]
+    }
+  ]
+}

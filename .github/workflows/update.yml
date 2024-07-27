@@ -1,0 +1,75 @@
+name: Update Rule
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-rule:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: set sing-box
+        run: |
+          wget https://github.com/SagerNet/sing-box/releases/download/v1.11.0-beta.12/sing-box-1.11.0-beta.12-linux-amd64.tar.gz
+          tar -xzvf sing-box-1.11.0-beta.12-linux-amd64.tar.gz --strip-components=1 $(tar -tf sing-box-1.11.0-beta.12-linux-amd64.tar.gz | grep 'sing-box$')
+          chmod +x ./sing-box
+
+      - name: adguard rule
+        run: |
+          wget https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt -O adguard.txt
+          wget https://raw.githubusercontent.com/ppfeufer/adguard-filter-list/master/blocklist -O adguard-custom.txt
+          ./sing-box rule-set convert --type adguard adguard-custom.txt
+          ./sing-box rule-set convert --type adguard adguard.txt
+          rm adguard.txt adguard-custom.txt
+
+      - name: id rule
+        run: |
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-geoid.srs -O geoip-geoid.srs
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-id.srs -O geoip-id.srs
+          ./sing-box rule-set decompile geoip-geoid.srs -o geoip-geoid-tmp.json
+          ./sing-box rule-set decompile geoip-id.srs -o geoip-id-tmp.json
+          ./sing-box rule-set merge id-tmp.json -c geoip-id-tmp.json -c geoip-geoid-tmp.json
+          jq '.rules[0].rules[0].ip_cidr = []' only_id.json > only_id_tmp.json
+          jq -s '.[1].rules[0].rules[0].ip_cidr = (.[0].rules[0].ip_cidr + .[1].rules[0].rules[0].ip_cidr) | .[1]' id-tmp.json only_id_tmp.json > only_id.json
+          ./sing-box rule-set compile only_id.json
+
+      - name: wa lokal rule
+        run: |
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-facebook.srs -O geoip-facebook.srs
+          ./sing-box rule-set decompile geoip-facebook.srs -o geoip-facebook-tmp.json
+          jq '.rules[0].ip_cidr = []' wa_local.json > wa_local_tmp.json
+          jq -s '{version: .[1].version,rules: [{ip_cidr: .[0].rules[0].ip_cidr,port: .[1].rules[0].port}]}' geoip-facebook-tmp.json wa_local_tmp.json > wa_local.json
+          ./sing-box rule-set compile wa_local.json
+
+      - name: compile rules
+        run: |
+          rm warped.srs commonports.srs rule-direct-custom.srs direct-some-web.srs
+          ./sing-box rule-set compile warped.json
+          ./sing-box rule-set compile hilook.json
+          ./sing-box rule-set compile commonports.json
+          ./sing-box rule-set compile direct-some-web.json
+          ./sing-box rule-set compile rule-direct-custom.json
+          rm sing-box sing-box-1.11.0-beta.12-linux-amd64.tar.gz
+
+      - name: show dir
+        run: ls -la
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.email "github-action@users.noreply.github.com"
+          git config --local user.name "GitHub Action"
+          git status
+          git add .
+          git commit -m "Update rule"
+          git pull
+          git push origin main
