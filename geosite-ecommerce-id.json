@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "rules": [
     {
       "domain": [
@@ -52,7 +52,6 @@
         ".alicdn.com",
         ".tokopedia.com",
         ".tokopedia.net",
-        ".tokopediax.com",
         ".susercontent.com",
         ".shopee.com",
         ".lazada.com",

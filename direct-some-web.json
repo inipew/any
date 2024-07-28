@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": "pikachu.my.id"
+    },
+    {
+      "domain_keyword": [
+        "appsflyer",
+        "cftunnel",
+        "argotunnel",
+        "zerotier",
+        "googlesyndication",
+        "googleadservices"
+      ]
+    }
+  ]
+}
