@@ -13,6 +13,7 @@ on:
       - wa_local.srs
       - adguard-custom.srs
       - adguard.srs
+  workflow_dispatch:
 
 jobs:
   update-rule:
@@ -65,8 +66,10 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          git diff --exit-code only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
-          echo "::set-output name=changes::$(git diff --name-only only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs)"
+          # git diff --exit-code only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
+          changes=$(git diff --name-only only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs)
+          echo changes=$changes >> $GITHUB_OUTPUT
+          git status
 
       - name: Commit and push
         env:
