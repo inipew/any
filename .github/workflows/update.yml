@@ -2,8 +2,17 @@ name: Update Rule
 
 on:
   push:
-    paths-ignore:
-      - "**.md"
+    branches:
+      - main
+    paths:
+      - only_id.json
+      - wa_local.json
+      - adguard-custom.txt
+      - adguard.txt
+      - only_id.srs
+      - wa_local.srs
+      - adguard-custom.srs
+      - adguard.srs
 
 jobs:
   update-rule:
@@ -26,7 +35,7 @@ jobs:
           wget https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt -O adguard.txt
           wget https://raw.githubusercontent.com/ppfeufer/adguard-filter-list/master/blocklist -O adguard-custom.txt
           wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-facebook.srs
-      
+
       - name: extract rule
         run: |
           chmod +x ./sing-box
@@ -45,7 +54,6 @@ jobs:
 
           jq '.rules[0].ip_cidr = []' wa_local.json > wa_local_tmp.json
           jq -s '{version: .[1].version,rules: [{ip_cidr: .[0].rules[0].ip_cidr,port: .[1].rules[0].port}]}' geoip-facebook.json wa_local_tmp.json > wa_local.json
-          
 
       - name: compile rule
         run: |
@@ -54,15 +62,19 @@ jobs:
           ./sing-box rule-set convert --type adguard adguard-custom.txt
           ./sing-box rule-set convert --type adguard adguard.txt
 
-      - name: Commit merged file
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
+          echo "::set-output name=changes::$(git diff --name-only only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs)"
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.check_changes.outputs.changes != ''
         run: |
           git config --local user.email "github-action@users.noreply.github.com"
           git config --local user.name "GitHub Action"
           git add only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
           git commit -m "Update rule"
-
-      - name: Push changes
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
           git push origin main
