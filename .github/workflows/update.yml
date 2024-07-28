@@ -1,0 +1,68 @@
+name: Update Rule
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  update-rule:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up jq
+        run: sudo apt-get install jq -y
+
+      - name: show dir
+        run: ls -la
+
+      - name: get rule
+        run: |
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-geoid.srs
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-id.srs
+          wget https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt -O adguard.txt
+          wget https://raw.githubusercontent.com/ppfeufer/adguard-filter-list/master/blocklist -O adguard-custom.txt
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-facebook.srs
+      
+      - name: extract rule
+        run: |
+          chmod +x ./sing-box
+          ./sing-box rule-set decompile geoip-geoid.srs
+          ./sing-box rule-set decompile geoip-id.srs
+          ./sing-box rule-set decompile geoip-facebook.srs
+
+      - name: show dir 2
+        run: ls -la
+
+      - name: merge rule
+        run: |
+          jq -s '.[0] * {rules: [{ip_cidr: (.[0].rules[0].ip_cidr + .[1].rules[0].ip_cidr)}]}' geoip-geoid.json geoip-id.json > id.json
+          jq '.rules[0].rules[0].ip_cidr = []' only_id.json > only_id_tmp.json
+          jq -s '.[1].rules[0].rules[0].ip_cidr = (.[0].rules[0].ip_cidr + .[1].rules[0].rules[0].ip_cidr) | .[1]' id.json only_id_tmp.json > only_id.json
+
+          jq '.rules[0].ip_cidr = []' wa_local.json > wa_local_tmp.json
+          jq -s '{version: .[1].version,rules: [{ip_cidr: .[0].rules[0].ip_cidr,port: .[1].rules[0].port}]}' geoip-facebook.json wa_local_tmp.json > wa_local.json
+          
+
+      - name: compile rule
+        run: |
+          ./sing-box rule-set compile only_id.json
+          ./sing-box rule-set compile wa_local.json
+          ./sing-box rule-set convert --type adguard adguard-custom.txt
+          ./sing-box rule-set convert --type adguard adguard.txt
+
+      - name: Commit merged file
+        run: |
+          git config --local user.email "github-action@users.noreply.github.com"
+          git config --local user.name "GitHub Action"
+          git add only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
+          git commit -m "Update rule"
+
+      - name: Push changes
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin main
