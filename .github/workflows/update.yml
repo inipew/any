@@ -4,15 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - only_id.json
-      - wa_local.json
-      - adguard-custom.txt
-      - adguard.txt
-      - only_id.srs
-      - wa_local.srs
-      - adguard-custom.srs
-      - adguard.srs
   workflow_dispatch:
 
 jobs:
@@ -26,35 +17,32 @@ jobs:
       - name: Set up jq
         run: sudo apt-get install jq -y
 
-      - name: show dir
-        run: ls -la
-
       - name: get rule
         run: |
-          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-geoid.srs
-          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-id.srs
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-geoid.srs -O geoip-geoid.srs
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-id.srs -O geoip-id.srs
           wget https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt -O adguard.txt
           wget https://raw.githubusercontent.com/ppfeufer/adguard-filter-list/master/blocklist -O adguard-custom.txt
-          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-facebook.srs
+          wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-facebook.srs -O geoip-facebook.srs
 
       - name: extract rule
         run: |
           chmod +x ./sing-box
-          ./sing-box rule-set decompile geoip-geoid.srs
-          ./sing-box rule-set decompile geoip-id.srs
-          ./sing-box rule-set decompile geoip-facebook.srs
+          ./sing-box rule-set decompile geoip-geoid.srs -o geoip-geoid-tmp.json
+          ./sing-box rule-set decompile geoip-id.srs -o geoip-id-tmp.json
+          ./sing-box rule-set decompile geoip-facebook.srs -o geoip-facebook-tmp.json
 
-      - name: show dir 2
+      - name: show dir
         run: ls -la
 
       - name: merge rule
         run: |
-          jq -s '.[0] * {rules: [{ip_cidr: (.[0].rules[0].ip_cidr + .[1].rules[0].ip_cidr)}]}' geoip-geoid.json geoip-id.json > id.json
+          jq -s '.[0] * {rules: [{ip_cidr: (.[0].rules[0].ip_cidr + .[1].rules[0].ip_cidr)}]}' geoip-geoid-tmp.json geoip-id-tmp.json > id-tmp.json
           jq '.rules[0].rules[0].ip_cidr = []' only_id.json > only_id_tmp.json
-          jq -s '.[1].rules[0].rules[0].ip_cidr = (.[0].rules[0].ip_cidr + .[1].rules[0].rules[0].ip_cidr) | .[1]' id.json only_id_tmp.json > only_id.json
+          jq -s '.[1].rules[0].rules[0].ip_cidr = (.[0].rules[0].ip_cidr + .[1].rules[0].rules[0].ip_cidr) | .[1]' id-tmp.json only_id_tmp.json > only_id.json
 
           jq '.rules[0].ip_cidr = []' wa_local.json > wa_local_tmp.json
-          jq -s '{version: .[1].version,rules: [{ip_cidr: .[0].rules[0].ip_cidr,port: .[1].rules[0].port}]}' geoip-facebook.json wa_local_tmp.json > wa_local.json
+          jq -s '{version: .[1].version,rules: [{ip_cidr: .[0].rules[0].ip_cidr,port: .[1].rules[0].port}]}' geoip-facebook-tmp.json wa_local_tmp.json > wa_local.json
 
       - name: compile rule
         run: |
@@ -63,21 +51,13 @@ jobs:
           ./sing-box rule-set convert --type adguard adguard-custom.txt
           ./sing-box rule-set convert --type adguard adguard.txt
 
-      - name: Check for changes
-        id: check_changes
-        run: |
-          # git diff --exit-code only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
-          changes=$(git diff --name-only only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs)
-          echo changes=$changes >> $GITHUB_OUTPUT
-          git status
-
       - name: Commit and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: steps.check_changes.outputs.changes != ''
         run: |
           git config --local user.email "github-action@users.noreply.github.com"
           git config --local user.name "GitHub Action"
-          git add only_id.json wa_local.json adguard-custom.txt adguard.txt only_id.srs wa_local.srs adguard-custom.srs adguard.srs
+          git status
+          git add .
           git commit -m "Update rule"
           git push origin main
