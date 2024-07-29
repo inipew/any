@@ -61,4 +61,5 @@ jobs:
           git status
           git add .
           git commit -m "Update rule"
+          git pull
           git push origin main
