@@ -48,6 +48,7 @@ jobs:
         run: |
           ./sing-box rule-set compile only_id.json
           ./sing-box rule-set compile wa_local.json
+          ./sing-box rule-set compile warped.json
           ./sing-box rule-set convert --type adguard adguard-custom.txt
           ./sing-box rule-set convert --type adguard adguard.txt
 
