@@ -48,6 +48,7 @@ jobs:
 
       - name: compile rule
         run: |
+          rm only_id.srs wa_local.srs warped.srs commonports.srs rule-direct-custom.srs adguard.srs adguard-custom.srs
           ./sing-box rule-set compile only_id.json
           ./sing-box rule-set compile wa_local.json
           ./sing-box rule-set compile warped.json
