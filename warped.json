@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "rules": [
     {
       "domain_suffix": [
@@ -42,7 +42,9 @@
         "hivetoon",
         "hangukhub",
         "novelupdates",
-        "ipinfo"
+        "ipinfo",
+	"disqus",
+	"fenrirtranslations"
       ]
     }
   ]
