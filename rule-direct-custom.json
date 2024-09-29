@@ -36,13 +36,8 @@
         "newtoki",
         "akupew",
         "novelcranel",
-	"yonglibrary"
-      ]
-    },
-    {
-      "domain_regex": [
-        "^.*push.apple.com$",
-        "^.*mtalk.google.com$"
+	"yonglibrary",
+	"shinigami"
       ]
     }
   ]
