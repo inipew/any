@@ -16,7 +16,9 @@
         ".android.chat.openai.com",
         ".whatismybrowser.com",
         ".xdaforums.com",
-        ".docsachhay.net"
+        ".docsachhay.net",
+	".msftconnecttest.com",
+	".msftncsi.com"
       ],
       "domain_keyword": [
         "apkomik",
