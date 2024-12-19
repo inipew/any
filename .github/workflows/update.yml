@@ -49,6 +49,7 @@ jobs:
           ./sing-box rule-set compile only_id.json
           ./sing-box rule-set compile wa_local.json
           ./sing-box rule-set compile warped.json
+          ./sing-box rule-set compile hilook.json
           ./sing-box rule-set compile commonports.json
           ./sing-box rule-set compile direct-some-web.json
           ./sing-box rule-set compile rule-direct-custom.json
