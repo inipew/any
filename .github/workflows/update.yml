@@ -55,6 +55,7 @@ jobs:
           ./sing-box rule-set compile warped.json
           ./sing-box rule-set compile hilook.json
           ./sing-box rule-set compile commonports.json
+          ./sing-box rule-set compile rule-port-game.json
           ./sing-box rule-set compile direct-some-web.json
           ./sing-box rule-set compile rule-direct-custom.json
           rm sing-box sing-box-1.11.0-beta.12-linux-amd64.tar.gz
