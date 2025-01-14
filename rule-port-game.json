@@ -236,12 +236,6 @@
         ]
       },
       {
-        "port_range": [
-          "1023:42068",
-          "42070:65535"
-        ]
-      },
-      {
           "domain_suffix": ".supercell.com"
       }
     ]
