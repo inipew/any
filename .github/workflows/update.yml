@@ -18,8 +18,8 @@ jobs:
       
       - name: set sing-box
         run: |
-          wget https://github.com/SagerNet/sing-box/releases/download/v1.11.0-beta.12/sing-box-1.11.0-beta.12-linux-amd64.tar.gz
-          tar -xzvf sing-box-1.11.0-beta.12-linux-amd64.tar.gz --strip-components=1 $(tar -tf sing-box-1.11.0-beta.12-linux-amd64.tar.gz | grep 'sing-box$')
+          wget https://github.com/SagerNet/sing-box/releases/download/v1.12.0-beta.25/sing-box-1.12.0-beta.25-linux-amd64.tar.gz
+          tar -xzvf sing-box-1.12.0-beta.25-linux-amd64.tar.gz --strip-components=1 $(tar -tf sing-box-1.12.0-beta.25-linux-amd64.tar.gz | grep 'sing-box$')
           chmod +x ./sing-box
 
       - name: adguard rule
@@ -58,7 +58,7 @@ jobs:
           ./sing-box rule-set compile rule-port-game.json
           ./sing-box rule-set compile direct-some-web.json
           ./sing-box rule-set compile rule-direct-custom.json
-          rm sing-box sing-box-1.11.0-beta.12-linux-amd64.tar.gz
+          rm sing-box sing-box-1.12.0-beta.25-linux-amd64.tar.gz
 
       - name: show dir
         run: ls -la
