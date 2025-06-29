@@ -18,8 +18,8 @@ jobs:
       
       - name: set sing-box
         run: |
-          wget https://github.com/SagerNet/sing-box/releases/download/v1.12.0-beta.25/sing-box-1.12.0-beta.25-linux-amd64.tar.gz
-          tar -xzvf sing-box-1.12.0-beta.25-linux-amd64.tar.gz --strip-components=1 $(tar -tf sing-box-1.12.0-beta.25-linux-amd64.tar.gz | grep 'sing-box$')
+          wget https://github.com/SagerNet/sing-box/releases/download/v1.12.0-beta.28/sing-box-1.12.0-beta.28-linux-amd64.tar.gz
+          tar -xzvf sing-box-1.12.0-beta.28-linux-amd64.tar.gz --strip-components=1 $(tar -tf sing-box-1.12.0-beta.28-linux-amd64.tar.gz | grep 'sing-box$')
           chmod +x ./sing-box
 
       - name: adguard rule
@@ -34,12 +34,33 @@ jobs:
         run: |
           wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-geoid.srs -O geoip-geoid.srs
           wget https://cdn.jsdelivr.net/gh/malikshi/sing-box-geo@rule-set-geoip/geoip-id.srs -O geoip-id.srs
-          ./sing-box rule-set decompile geoip-geoid.srs -o geoip-geoid-tmp.json
-          ./sing-box rule-set decompile geoip-id.srs -o geoip-id-tmp.json
-          ./sing-box rule-set merge id-tmp.json -c geoip-id-tmp.json -c geoip-geoid-tmp.json
-          jq '.rules[0].rules[0].ip_cidr = []' only_id.json > only_id_tmp.json
-          jq -s '.[1].rules[0].rules[0].ip_cidr = (.[0].rules[0].ip_cidr + .[1].rules[0].rules[0].ip_cidr) | .[1]' id-tmp.json only_id_tmp.json > only_id.json
-          ./sing-box rule-set compile only_id.json
+          ./sing-box rule-set decompile geoip-geoid.srs
+          ./sing-box rule-set decompile geoip-id.srs
+          jq -s '
+          {
+            version: 3,
+            rules: [
+              {
+                type: "logical",
+                mode: "and",
+                rules: [
+                  {
+                    ip_cidr: (.[0].rules[0].ip_cidr + .[1].rules[0].ip_cidr | unique)
+                  },
+                  {
+                    port: [
+                      21, 22, 23, 80, 81, 123, 143, 182, 183, 194, 443, 465, 587, 853,
+                      993, 995, 998, 2052, 2053, 2082, 2083, 2086, 2095, 2096,
+                      5222, 5228, 5229, 5230, 8000, 8080, 8081, 8088, 8443,
+                      8880, 8883, 8888, 8889, 42069
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          ' geoip-geoid.json geoip-id.json > geoip-onlyid.json
+          ./sing-box rule-set compile geoip-onlyid.json
 
       - name: wa lokal rule
         run: |
@@ -58,7 +79,7 @@ jobs:
           ./sing-box rule-set compile rule-port-game.json
           ./sing-box rule-set compile direct-some-web.json
           ./sing-box rule-set compile rule-direct-custom.json
-          rm sing-box sing-box-1.12.0-beta.25-linux-amd64.tar.gz
+          rm sing-box sing-box-1.12.0-beta.28-linux-amd64.tar.gz
 
       - name: show dir
         run: ls -la
