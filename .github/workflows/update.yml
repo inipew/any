@@ -5,8 +5,11 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write  # perlu untuk buat/update release dan upload asset
 
 jobs:
   update-rule:
@@ -15,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: set sing-box
         run: |
           wget https://github.com/SagerNet/sing-box/releases/download/v1.13.0-alpha.27/sing-box-1.13.0-alpha.27-linux-amd64.tar.gz
@@ -72,26 +75,40 @@ jobs:
 
       - name: compile rules
         run: |
-          rm warped.srs commonports.srs rule-direct-custom.srs direct-some-web.srs
+          rm -f warped.srs commonports.srs rule-direct-custom.srs direct-some-web.srs || true
           ./sing-box rule-set compile warped.json
           ./sing-box rule-set compile hilook.json
           ./sing-box rule-set compile commonports.json
           ./sing-box rule-set compile rule-port-game.json
           ./sing-box rule-set compile direct-some-web.json
           ./sing-box rule-set compile rule-direct-custom.json
-          rm sing-box sing-box-1.13.0-alpha.27-linux-amd64.tar.gz
+          rm -f sing-box sing-box-1.13.0-alpha.27-linux-amd64.tar.gz
 
       - name: show dir
         run: ls -la
 
+      # === Upload semua .srs ke GitHub Release (tag: srs-latest) ===
+      - name: Publish .srs to Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: srs-latest
+          name: "Sing-box Rules (latest)"
+          body: "Build: ${{ github.run_number }} • Commit: ${{ github.sha }}"
+          artifacts: "*.srs"
+          allowUpdates: true            # update release yang sama
+          replacesArtifacts: true       # replace asset lama
+          generateReleaseNotes: true
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # (opsional) tetap commit perubahan ke repo
       - name: Commit and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "github-action@users.noreply.github.com"
           git config --local user.name "GitHub Action"
-          git status
           git add .
-          git commit -m "Update rule"
-          git pull
+          git commit -m "Update rule" || echo "no changes"
+          git pull --rebase
           git push origin main
